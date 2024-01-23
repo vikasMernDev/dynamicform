@@ -48,6 +48,13 @@ const Add = () => {
 
   const onSubmit = (data) => {
     console.log(data); // Handle your form data here
+    if (!data.dob) {
+      errors.dob = { message: 'Date of birth is required' };
+    }
+  
+    if (!data.address) {
+      errors.address = { message: 'Address is required' };
+    }
     const dateDob = moment(data.dob.$d).format('DD/MM/YYYY');
     data.dob = dateDob
     updateItems([data])
@@ -144,7 +151,7 @@ const Add = () => {
               name="dob"
               control={control}
               defaultValue={null}
-              rules={{ required: 'Date is required' }}
+              rules={{ required: 'DOB is required' }}
               render={({ field }) => (
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DatePicker
@@ -153,12 +160,17 @@ const Add = () => {
                     margin="normal"
                     label="DOB"
                     KeyboardButtonProps={{ 'aria-label': 'change date' }}
-                    error={!!errors.selectedDate}
-                    helperText={errors.selectedDate?.message}
+                    error={!!errors.dob}
+                    helperText={errors.dob?.message}
                   />
                 </LocalizationProvider>
               )}
             />
+             {errors.dob && (
+          <Typography variant="body2" color="error">
+            {errors.dob.message}
+          </Typography>
+        )}
           </Grid>
           <Grid item xs={6}>
             <Controller
@@ -175,10 +187,15 @@ const Add = () => {
                   placeholder='Address'
                   margin="normal"
                   error={!!errors.address}
-                  helperText={errors.address?.address}
+                  helperText={errors.address && errors.address.message}
                 />
               )}
             />
+             {errors.address && (
+          <Typography variant="body2" color="error">
+            {errors.address.message}
+          </Typography>
+        )}
           </Grid>
           <Grid container item xs={12} mb={2} sx={{ display: 'block' }}>
             <Stack>
