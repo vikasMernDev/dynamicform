@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { Button, TextField, Container, Typography, TextareaAutosize, Grid, Stack, InputLabel, FormControl } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -8,6 +8,7 @@ import moment from 'moment';
 import UserExperience from '../modals/UserExperience';
 import { useNavigate, useParams } from 'react-router-dom';
 import { InsertEmoticonSharp } from '@mui/icons-material';
+import dayjs from 'dayjs';
 
 const Update = () => {
     const [open, setOpen] = React.useState(false);
@@ -18,69 +19,54 @@ const Update = () => {
     const { id } = useParams()
     const [items, setItems] = React.useState([]);
     const [updatedItems, setUpdatedItems] = useState();
+
+    const storedItems = JSON.parse(localStorage.getItem('user'))
+ 
+ 
+
+    const data = useMemo(() => {        
+        const getData = storedItems?.find((item, i) => i == id)
+        return getData
+
+    }, [id])
+
+    console.log("hhhhhhh",data)
+    
     const defaultValues = {
-        firstName: updatedItems?.firstName || '',
-        lastName:  updatedItems?.lastName || '',
-        email:  updatedItems?.lastName || '',
-        phone:  updatedItems?.lastName || '',
-        address: updatedItems?.lastName || '',
+        firstName: data?.firstName || '',
+        lastName: data?.lastName || '',
+        email: data?.email || '',
+        phone: data?.phone || '',
+        address: data?.address || '',
+        dob:  data?.dob ? dayjs(data.dob, 'DD/MM/YYYY') : null,
+        userExperience: data?.userExperience || [],
+        userEducation:data?.userEducation || []
     }
 
     const { control, reset, handleSubmit, register, formState: { errors } } = useForm({
         defaultValues: defaultValues
     });
 
-    // Define the first array
-    const { fields: userEducationFields, append: appendEducation, remove: removeEducation } = useFieldArray({
-        control,
-        name: 'userEducation',
-    });
-
-    // Define the second array
     const { fields: userExperienceFields, append: appendExperience, remove: removeExperience } = useFieldArray({
         control,
         name: 'userExperience', // Use a different name for the second array
     });
 
-    // Fetch items from localStorage on component mount
-    useEffect(() => {
-        const fetchData = async()=>{
-            const storedItems = await JSON.parse(localStorage.getItem('user'));
-            if (storedItems) {
-                setItems(storedItems);
-            }
-        }
-        fetchData()
-    }, []); 
+       // Define the first array
+       const { fields: userEducationFields, append: appendEducation, remove: removeEducation } = useFieldArray({
+        control,
+        name: 'userEducation',
+    });
 
-    useEffect(() => {
-        const getItemByIndex = () => {
-            console.log("items",items)
-            if (id >= 0 && id < items.length && items) {
-            console.log("idddd",items[id])
-
-                setUpdatedItems(items[id]);
-            }
-        };
-        getItemByIndex()
-    }, [id,items]);
-    // function to get an item by index
-   
-    const updateItems = (newItems) => {
-        // Merge newItems with the existing items
-        const mergedItems = [...items, ...newItems];
-        setItems(mergedItems);
-        // Save mergedItems to localStorage
-        localStorage.setItem('user', JSON.stringify(mergedItems));
-        navigate('/')
-
-    };
 
     const onSubmit = (data) => {
-        const dateDob = moment(data.dob.$d).format('DD/MM/YYYY');
+         const dateDob = moment(data.dob.$d).format('DD/MM/YYYY');
         data.dob = dateDob
-        updateItems([data])
+        storedItems[id] = data
+        localStorage.setItem('user', JSON.stringify(storedItems));
+
         reset()
+        navigate('/')
     };
     return (
         <Container component="main" maxWidth="xs">
@@ -166,11 +152,9 @@ const Update = () => {
                         />
                     </Grid>
                     <Grid item xs={6}>
-
-                        <Controller
+                        <Controller 
                             name="dob"
                             control={control}
-                            defaultValue={null}
                             rules={{ required: 'Date is required' }}
                             render={({ field }) => (
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -179,6 +163,7 @@ const Update = () => {
                                         fullWidth
                                         margin="normal"
                                         label="DOB"
+                                        format='DD/MM/YYYY'
                                         KeyboardButtonProps={{ 'aria-label': 'change date' }}
                                         error={!!errors.selectedDate}
                                         helperText={errors.selectedDate?.message}
@@ -362,7 +347,7 @@ const Update = () => {
                             </Grid>
                         ))}
                     </Grid>
-                    <Button type="submit" variant="contained" color="primary"  sx={{ marginLeft: 2 }}>
+                    <Button type="submit" variant="contained" color="primary" sx={{ marginLeft: 2 }}>
                         Submit
                     </Button>
                 </Grid>
